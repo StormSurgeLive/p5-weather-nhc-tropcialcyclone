@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use HTTP::Tiny ();
 use HTTP::Status qw/:constants/;
-use JSON::XS ();
+use JSON::XS                             ();
 use Weather::NHC::TropicalCyclone::Storm ();
 
 our $DEFAULT_URL     = q{https://www.nhc.noaa.gov/CurrentStorms.json};
@@ -17,19 +17,19 @@ our $DEFAULT_TIMEOUT = 10;
 sub new {
     my $pkg  = shift;
     my $self = {
-      _obj => undef,
+        _obj => undef,
     };
     bless $self, $pkg;
     return $self;
 }
 
 sub fetch {
-    my ($self, $timeout) = @_;
+    my ( $self, $timeout ) = @_;
     my $http = HTTP::Tiny->new();
 
     local $SIG{ALRM} = sub { die "Request has timed out.\n" };
 
-    alarm($timeout // $DEFAULT_TIMEOUT);
+    alarm( $timeout // $DEFAULT_TIMEOUT );
 
     # get content via $DEFAULT_URL unless --file option is passed
     local $@;
@@ -72,7 +72,7 @@ __END__
 
 =head1 NAME
 
-Weather::NWS::TropicalCyclone
+Weather::NHC::TropicalCyclone
 
 =head1 SYNOPSIS
 
@@ -108,7 +108,7 @@ the JSON provided by the NHC describing the current set of active storms.
 If the JSON is malformed or otherwise can't be parsed, C<fetch> will throw
 an exception.
 
-Fetch will time out after C<$Weather::NWS::TropicalCyclone::DEFAULT_TIMEOUT> by
+Fetch will time out after C<$Weather::NHC::TropicalCyclone::DEFAULT_TIMEOUT> by
 throwing an exception. In order to disable the alarm, call C<fetch> with a
 parameter of 0:
 
@@ -125,3 +125,7 @@ the methods provided by the C<Weather::NHC::TropicalCyclone::Storm> instances
 returned by this method.
 
 =back
+
+=head1 COPYRIGHT and LICENSE
+
+This module is distributed under the same terms as Perl itself.

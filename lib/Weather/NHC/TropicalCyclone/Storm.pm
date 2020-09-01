@@ -2,7 +2,7 @@ package Weather::NHC::TropicalCyclone::Storm;
 
 use strict;
 use warnings;
-use parent qw/Class::Accessor/;
+
 use HTTP::Tiny ();
 use HTTP::Status qw/:constants/;
 use Validate::Tiny    ();
@@ -10,11 +10,8 @@ use HTML::TreeBuilder ();
 
 our $DEFAULT_GRAPHICS_ROOT = q{https://www.nhc.noaa.gov/storm_graphics/};
 
-# used for creating setters/getters; meant to match all first level
-# keys possible for each storm
-our @FIELDS = (
-    qw/id binNumber name classification intensity pressure latitude longitude latitude_numberic movementDir movementSpeed lastUpdate publicAdvisory forecastAdvisory windSpeedProbabilities forecastDiscussion forecastGraphics forecastTrack windWatchesWarnings trackCone initialWindExtent forecastWindRadiiGIS bestTrackGIS earliestArrivalTimeTSWindsGIS mostLikelyTimeTSWindsGIS windSpeedProbabilitiesGIS kmzFile34kt kmzFile50kt kmzFile64kt stormSurgeWatchWarningGIS potentialStormSurgeFloodingGIS/
-);
+use Object::Tiny
+  qw/id binNumber name classification intensity pressure latitude longitude latitude_numberic movementDir movementSpeed lastUpdate publicAdvisory forecastAdvisory windSpeedProbabilities forecastDiscussion forecastGraphics forecastTrack windWatchesWarnings trackCone initialWindExtent forecastWindRadiiGIS bestTrackGIS earliestArrivalTimeTSWindsGIS mostLikelyTimeTSWindsGIS windSpeedProbabilitiesGIS kmzFile34kt kmzFile50kt kmzFile64kt stormSurgeWatchWarningGIS potentialStormSurgeFloodingGIS/;
 
 our $CLASSIFICATIONS = {
     TD  => q{Tropical Depression},
@@ -27,10 +24,8 @@ our $CLASSIFICATIONS = {
     PC  => q{Potential Tropical Cyclone},
 };
 
-__PACKAGE__->mk_accessors(@FIELDS);
-
 my $validation_rules = {
-    fields => \@__PACKAGE__::FIELDS,
+    fields => [qw/id binNumber name classification/],
     checks => [
         [qw/id binNumber name classification/] => Validate::Tiny::is_required(),
         classification                         => sub {
@@ -425,3 +420,7 @@ C<mirror> method. See C<perldoc HTTP::Tiny> for more information.
 
 Package variable, C<$DEFAULT_GRAPHICS_ROOT>, defines the base URL used to determine
 the list of graphics available for the storm.
+
+=head1 COPYRIGHT and LICENSE
+
+This module is distributed under the same terms as Perl itself.

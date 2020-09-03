@@ -298,7 +298,7 @@ sub _get_file {
 sub fetch_best_track {
     my ( $self, $local_file ) = @_;
 
-    my $btk_file = sprintf( "b%s", $self->id );
+    my $btk_file = sprintf( "b%s.dat", $self->id );
     my $url = sprintf( "%s/%s.dat", $DEFAULT_BTK_ROOT, $btk_file );
 
     $local_file //= $btk_file;

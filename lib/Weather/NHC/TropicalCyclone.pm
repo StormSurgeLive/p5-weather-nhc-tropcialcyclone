@@ -9,9 +9,9 @@ use Weather::NHC::TropicalCyclone::Storm ();
 
 our $VERSION                     = q{0.06};
 our $DEFAULT_URL                 = q{https://www.nhc.noaa.gov/CurrentStorms.json};
-our $DEFAULT_ATLANTIC_RSS        = q{https://www.nhc.noaa.gov/index-at.xml};
-our $DEFAULT_EAST_PACIFIC_RSS    = q{https://www.nhc.noaa.gov/index-ep.xml};
-our $DEFAULT_CENTRAL_PACIFIC_RSS = q{https://www.nhc.noaa.gov/index-cp.xml};
+our $DEFAULT_RSS_ATLANTIC        = q{https://www.nhc.noaa.gov/index-at.xml};
+our $DEFAULT_RSS_EAST_PACIFIC    = q{https://www.nhc.noaa.gov/index-ep.xml};
+our $DEFAULT_RSS_CENTRAL_PACIFIC = q{https://www.nhc.noaa.gov/index-cp.xml};
 our $DEFAULT_TIMEOUT             = 10;
 
 # container class for requesting JSON and providing
@@ -70,19 +70,19 @@ sub active_storms {
     return \@storms;
 }
 
-sub fetch_atlantic_rss {
+sub fetch_rss_atlantic {
     my ( $self, $local_file ) = @_;
-    return $self->_fetch_rss( $DEFAULT_ATLANTIC_RSS, $local_file );
+    return $self->_fetch_rss( $DEFAULT_RSS_ATLANTIC, $local_file );
 }
 
-sub fetch_east_pacific_rss {
+sub fetch_rss_east_pacific {
     my ( $self, $local_file ) = @_;
-    return $self->_fetch_rss( $DEFAULT_EAST_PACIFIC_RSS, $local_file );
+    return $self->_fetch_rss( $DEFAULT_RSS_EAST_PACIFIC, $local_file );
 }
 
-sub fetch_central_pacific_rss {
+sub fetch_rss_central_pacific {
     my ( $self, $local_file ) = @_;
-    return $self->_fetch_rss( $DEFAULT_CENTRAL_PACIFIC_RSS, $local_file );
+    return $self->_fetch_rss( $DEFAULT_RSS_CENTRAL_PACIFIC, $local_file );
 }
 
 sub _fetch_rss {
@@ -171,9 +171,9 @@ The following methods are provided to fetch the raw text of some of the RSS feed
 available at L<https://www.nhc.noaa.gov/aboutrss.shtml>.
 
    my $nhc         = Weather::NHC::TropicalStorm->new;
-   my $at_rss_text = $nhc->fetch_atlantic_rss; 
-   my $ep_rss_text = $nhc->fetch_east_pacific_rss; 
-   my $cp_rss_text = $nhc->fetch_central_pacific_rss;
+   my $at_rss_text = $nhc->fetch_rss_atlantic; 
+   my $ep_rss_text = $nhc->fetch_rss_east_pacific; 
+   my $cp_rss_text = $nhc->fetch_rss_central_pacific;
 
 Note: This module doesn't provide facilities for converting this RSS into a Perl
 data structure. For this, use a module like L<XML::RSS>.
@@ -184,20 +184,20 @@ file.
 
 =over 3
 
-=item C<fetch_atlantic_basin_rss>
+=item C<fetch_rss_atlantic_basin>
 
 Fetches RSS available at L<https://www.nhc.noaa.gov/index-at.xml>. Internally,
-this URL is defined with the package variable, C<$DEFAULT_RSS_ATLANTIC_URL>.
+this URL is defined with the package variable, C<$DEFAULT_RSS_ATLANTIC>.
 
-=item C<fetch_east_pacific_basin_rss>
+=item C<fetch_rss_east_pacific_basin>
 
 Fetches RSS available at L<https://www.nhc.noaa.gov/index-ep.xml>. Internally,
-this URL is defined with the package variable, C<$DEFAULT_RSS_EAST_PACIFIC_URL>.
+this URL is defined with the package variable, C<$DEFAULT_RSS_EAST_PACIFIC>.
 
-=item C<fetch_central_pacific_basin_rss>
+=item C<fetch_rss_central_pacific_basin>
 
 Fetches RSS available at L<https://www.nhc.noaa.gov/index-cp.xml>. Internally,
-this URL is defined with the package variable, C<$DEFAULT_RSS_CENTRAL_PACIFIC_URL>.
+this URL is defined with the package variable, C<$DEFAULT_RSS_CENTRAL_PACIFIC>.
 
 =back
 

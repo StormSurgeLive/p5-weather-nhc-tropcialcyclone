@@ -299,7 +299,7 @@ sub fetch_best_track {
     my ( $self, $local_file ) = @_;
 
     my $btk_file = sprintf( "b%s.dat", $self->id );
-    my $url = sprintf( "%s/%s.dat", $DEFAULT_BTK_ROOT, $btk_file );
+    my $url = sprintf( "%s/%s", $DEFAULT_BTK_ROOT, $btk_file );
 
     $local_file //= $btk_file;
 
@@ -322,7 +322,8 @@ __END__
 
 =head1 NAME
 
-Weather::NHC::TropicalCyclone::Storm - Provides a convenient interface to NHC's Tropical Cyclone JSON format.
+Weather::NHC::TropicalCyclone::Storm - Provides a convenient interface to individual storm sections
+delivered inside of the NHC Tropical Cyclone JSON file. 
 
 =head1 SYNOPSIS
 

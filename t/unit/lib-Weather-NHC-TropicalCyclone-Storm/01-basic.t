@@ -61,6 +61,7 @@ my $json = <$dh>;
         ok my $local_file = $s->fetch_best_track, q{set up to download best track ".dat" file looks good via fetch_best_track};
         my $expected_name = sprintf( qq{b%s.dat}, $s->id );
         is $local_file, $expected_name, q{expected best track file name returned};
+        like $url, qr/$expected_name/, q{URL looks valid};
         is q{foobar.dat}, $s->fetch_best_track(q{foobar.dat}), q{custom local file honored by fetch_best_track};
         my $types = $s->_fetch_data_types;
         for my $type ( keys %$types ) {

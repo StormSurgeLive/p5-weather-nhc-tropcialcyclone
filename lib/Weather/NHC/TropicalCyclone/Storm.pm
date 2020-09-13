@@ -96,6 +96,7 @@ sub fetch_forecastGraphics {
 
     $html =~ m/storm_graphics\/(.+)\/refresh/;
     my $prefix = $1;
+    return [] if not $prefix;
 
     my $base = sprintf( qq{%s/%s}, $DEFAULT_GRAPHICS_ROOT, $prefix );
     $response = $http->get($base);

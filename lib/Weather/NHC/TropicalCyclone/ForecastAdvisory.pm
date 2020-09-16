@@ -7,28 +7,17 @@ use Getopt::Long;
 
 use Object::Tiny qw/input output as_atcf/;
 
-if ( not caller ) {
-    my $input;          # name of input file
-    my $output_file;    # name of output file
-    GetOptions(
-        "input=s"  => \$input,
-        "output=s" => \$output_file,
-    );
-    my $fst = __PACKAGE__->new( input => $input, output => $output_file );
-    $fst->extract_atcf;
-    $fst->save_atcf;
-    exit 0;             # success
-}
-
-# constructor
 sub new {
     my ( $pkg, %self ) = @_;
-    $self{as_atcf} = [];
-    return bless \%self, $pkg;
+    if ( not exists $self{input} or not exists $self{output} ) {
+        die qq{Constructor requires specifying the 'input' and 'output' parameters.\n};
+    }
+    my $self = bless \%self, $pkg;
+    return $self;
 }
 
 sub extract_and_save_atcf {
-    my $self       = shift;
+    my $self = shift;
     $self->extract_atcf;
     return $self->save_atcf;
 }
@@ -111,8 +100,9 @@ sub extract_atcf {
             printf STDERR "INFO: nhc_advisory_bot.pl: STORM NUMBER: $storm_number\n";
             printf STDERR "INFO: nhc_advisory_bot.pl: STORM YEAR: $storm_year\n";
         }
-        die qq{ERROR: nhc_advisory_bot.pl: NO NHC NUMBER/YEAR\n} if not $storm_number or not $storm_year;
+        die qq{ERROR: nhc_advisory_bot.pl: NO NHC NUMBER/YEAR\n} if not $storm_number or not $storm_year or not $storm_basin;
     }
+    $atcf_line =~ s/_BASIN_/$storm_basin/;
     my $storm_number_str = sprintf( "%02d", $storm_number );
     substr( $atcf_line, 4, 2 ) = $storm_number_str;
 
@@ -374,7 +364,7 @@ sub extract_atcf {
 
             # Get the next line and parse the isotachs
             $i++;
-            ( $i, my $output_ref ) = parseIsotachs( $body_ref, $i, $atcf_line );
+            ( $i, my $output_ref ) = _parseIotachs( $body_ref, $i, $atcf_line );
             push @output, @$output_ref;
         }
         $i++;
@@ -387,7 +377,7 @@ sub extract_atcf {
     return $self->as_atcf;
 }
 
-sub parseIsotachs {
+sub _parseIotachs {
     my ( $body_ref, $i, $atcf_line ) = @_;
     my $isotachs_found = 0;
     my @isotachs       = ();
@@ -514,7 +504,7 @@ C<save_atcf> or C<extract_and_save_atcf> is called.
 
 Saves contents returned by C<as_atcf> to the file specific by C<output>.
 
-=item C<parseIsotachs>
+=item C<_parseIotachs>
 
 Internal method that assists C<extract_atcf> in its parsing.
 
@@ -524,11 +514,12 @@ Internal method that assists C<extract_atcf> in its parsing.
 
 The core parsing code in this module was created by Jason Fleming for use
 in the ADCIRC Surge Guidance System (ASGS). It is contained in the file,
-C<nhc_advisory_bot.pl>.
+C<nhc_advisory_bot.pl>, which is available in their github repository. This
+module is presented simply as a wrapper around this functionality.
 
 =head1 LICENSE & COPYRIGHT
 
-Copyright(C) 2009--2015: Jason Fleming
+Copyright(C) 2009-2015: Jason Fleming
 
 This file is part of the ADCIRC Surge Guidance System (ASGS).
 

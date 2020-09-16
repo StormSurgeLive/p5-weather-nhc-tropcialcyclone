@@ -97,8 +97,6 @@ sub extract_atcf {
             $storm_basin  = $1;
             $storm_number = $2;
             $storm_year   = $3;
-            printf STDERR "INFO: nhc_advisory_bot.pl: STORM NUMBER: $storm_number\n";
-            printf STDERR "INFO: nhc_advisory_bot.pl: STORM YEAR: $storm_year\n";
         }
         die qq{ERROR: nhc_advisory_bot.pl: NO NHC NUMBER/YEAR\n} if not $storm_number or not $storm_year or not $storm_basin;
     }
@@ -133,7 +131,6 @@ sub extract_atcf {
             $nowcast_day   = $vals[3];
         }
         $nowcast_date_time = $nowcast_year . $nowcast_month . $nowcast_day . $nowcast_hour;
-        printf STDERR "INFO: nhc_advisory_bot.pl: Time of nowcast is $nowcast_date_time\n";
         substr( $atcf_line, 8, 10 ) = sprintf( "%10d", $nowcast_date_time );
     }
 
@@ -176,9 +173,6 @@ sub extract_atcf {
     substr( $atcf_line, 148, 10 ) = sprintf( "%10s", $storm_name );
     my $adv_num_str     = sprintf( "%02d", $adv_num );
     my $adv_num_url_str = sprintf( "%03d", $adv_num );
-    printf STDERR "INFO: nhc_advisory_bot.pl: STORM NAME: $storm_name\n";
-    printf STDERR "INFO: nhc_advisory_bot.pl: STORM CLASS: $storm_class\n";
-    printf STDERR "INFO: nhc_advisory_bot.pl: ADVISORY NUMBER: $adv_num_str\n";
 
     # HURRICANE CENTER LOCATED NEAR 23.4N  73.9W AT 02/1500Z
     # or
@@ -207,7 +201,6 @@ sub extract_atcf {
     my $nowcast_lon = sprintf( "%4d$ew_hem", $lon * 10 );
     substr( $atcf_line, 34, 5 ) = sprintf( "%5s", $nowcast_lat );
     substr( $atcf_line, 41, 5 ) = sprintf( "%5s", $nowcast_lon );
-    printf STDERR "INFO: nhc_advisory_bot.pl: Nowcast position is '$nowcast_lat' '$nowcast_lon'\n";
 
     #PRESENT MOVEMENT TOWARD THE NORTH-NORTHWEST OR 330 DEGREES AT   9 KT
     @match = grep /^PRESENT MOVEMENT TOWARD THE/, @{$body_ref};
@@ -218,8 +211,6 @@ sub extract_atcf {
         }
         substr( $atcf_line, 138, 4 ) = sprintf( "%4d", $center_direction );
         substr( $atcf_line, 143, 4 ) = sprintf( "%4d", $center_speed );
-        printf STDERR "INFO: nhc_advisory_bot.pl: nowcast storm direction is $center_direction degrees\n";
-        printf STDERR "INFO: nhc_advisory_bot.pl: nowcast storm speed is $center_speed knots\n";
     }
 
     @match = grep /^ESTIMATED MINIMUM CENTRAL PRESSURE/, @{$body_ref};
@@ -229,7 +220,6 @@ sub extract_atcf {
         }
     }
     substr( $atcf_line, 53, 4 ) = sprintf( "%4d", $pressure );
-    printf STDERR "INFO: nhc_advisory_bot.pl: nowcast central pressure is $pressure\n";
 
     #MAX SUSTAINED WINDS  25 KT WITH GUSTS TO  35 KT.
     #MAX SUSTAINED WINDS 125 KT WITH GUSTS TO 155 KT.
@@ -245,8 +235,6 @@ sub extract_atcf {
 
     substr( $atcf_line, 47,  4 ) = sprintf( "%4d", $vmax );
     substr( $atcf_line, 113, 4 ) = sprintf( "%4d", $gusts );
-    printf STDERR "INFO: nhc_advisory_bot.pl: nowcast max wind is $vmax\n";
-    printf STDERR "INFO: nhc_advisory_bot.pl: nowcast gusts is $gusts\n";
     my $forecast_atcf_filename = lc($storm_name) . "_advisory_" . $adv_num_str . ".fst";
     #
     # collect nowcast wind radii, if any

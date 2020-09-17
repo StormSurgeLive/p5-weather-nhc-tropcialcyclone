@@ -12,7 +12,7 @@ use_ok q{Weather::NHC::TropicalCyclone};
 my $obj = Weather::NHC::TropicalCyclone->new;
 isa_ok $obj, q{Weather::NHC::TropicalCyclone}, q{Can create instance of Weather::NHC::TropicalCyclone};
 
-can_ok( $obj, (qw/new fetch active_storms fetch_rss_atlantic fetch_rss_east_pacific fetch_rss_central_pacific/) );
+can_ok( $obj, (qw/new fetch active_storms get_storm_by_id get_storm_ids _update_storm_cache fetch_rss_atlantic fetch_rss_east_pacific fetch_rss_central_pacific/) );
 
 {
     ok $Weather::NHC::TropicalCyclone::DEFAULT_RSS_ATLANTIC,        q{Found default Atlantic RSS URL};
@@ -93,8 +93,16 @@ ok ref $obj->active_storms eq q{ARRAY}, q{active_storms is an array ref};
     my $obj2 = Weather::NHC::TropicalCyclone->new;
     isa_ok $obj2, q{Weather::NHC::TropicalCyclone}, q{Can create instance of Weather::NHC::TropicalCyclone};
     ok $obj2->fetch, q{testing 'fetch' method};
+    is q{HASH}, ref $obj2->{_storms}, q{internal storm cache is a hash ref};
+    ok defined $obj2->{_storms}, q{internal storm cache is defined};
     is( 2, scalar @{ $obj2->{_obj}->{activeStorms} }, q{active_storms count is as expected} );
     for my $s ( @{ $obj2->active_storms } ) {
+        isa_ok $s, q{Weather::NHC::TropicalCyclone::Storm};
+    }
+
+    for my $id ( @{ $obj2->get_storm_ids } ) {
+        ok defined $id, q{storm id is defined, from cache};
+        my $s = $obj2->get_storm_by_id($id);
         isa_ok $s, q{Weather::NHC::TropicalCyclone::Storm};
     }
 

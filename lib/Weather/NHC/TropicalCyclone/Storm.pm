@@ -458,8 +458,12 @@ forecast advisory in ATCF format. Returns a list, item 1 is the array reference
 containing the ATCF data; if the optional file name was passed, the same value
 is passed. If no local file name is passed, this value with be undef.
 
+   # to get $atcf_ref without saving to a file
+   my ($atcf_ref, $advNum_atcf, $saved_file) = $storm->fetch_forecastAdvisory_as_atcf($file);
+
+   # to save ATCF format to a file
    my $file = q{my.fst};
-   my ($atcf_ref, $saved_file) = $storm->fetch_forecastAdvisory_as_atcf($file);
+   my ($atcf_ref, $advNum_atcf, $saved_file) = $storm->fetch_forecastAdvisory_as_atcf($file);
 
 Fetches the forecast advisory, converts the forecast advisory into ATCF format,
 then returns an array reference containing each full ATCF record as an element

@@ -5,12 +5,14 @@ use warnings;
 use Date::Calc;
 use Getopt::Long;
 
-use Object::Tiny qw/input output as_atcf/;
+use Object::Tiny qw/input_file input_text output_file as_atcf/;
 
 sub new {
     my ( $pkg, %self ) = @_;
-    if ( not exists $self{input} or not exists $self{output} ) {
-        die qq{Constructor requires specifying the 'input' and 'output' parameters.\n};
+
+    # input_file and input_text are mutually exclusive via the contructor
+    if ( not( exists $self{input_file} or exists $self{input_text} ) or ( exists $self{input_file} and exists $self{input_text} ) or not exists $self{output_file} ) {
+        die qq{Constructor requires specifying the 'input_file' xor 'input_text', and 'output_file' parameters.\n};
     }
     my $self = bless \%self, $pkg;
     return $self;
@@ -24,19 +26,27 @@ sub extract_and_save_atcf {
 
 sub save_atcf {
     my $self = shift;
-    open( my $fh, q{>}, $self->output ) || die qq{ERROR: nhc_advisory_bot.pl: Failed to open output ATCF file } . $self->output . qq{ : $!.\n};
+    open( my $fh, q{>}, $self->output_file ) || die qq{Failed to open output ATCF file} . $self->output_file . qq{ : $!.\n};
     my $output_ref = $self->as_atcf;
     print $fh join( qq{\n}, @$output_ref );
     close $fh;
-    return $self->output;
+    return $self->output_file;
 }
 
 sub extract_atcf {
     my $self = shift;
 
-    open( my $INPUT, q{<}, $self->input ) || die q{ERROR: nhc_advisory_bot.pl: Failed to open forecast advisory file } . $self->input . qq{ for conversion to ATCF format: $!.\n};
-    my @lines = (<$INPUT>);
-    close $INPUT;
+    my @lines = ();
+
+  ADVISORY_SOURCE:
+    if ( $self->input_file ) {
+        open( my $INPUT, q{<}, $self->input_file ) || die q{Failed to open forecast advisory file} . $self->input_file . qq{ for conversion to ATCF format: $!.\n};
+        @lines = (<$INPUT>);
+        close $INPUT;
+    }
+    elsif ( $self->input_text ) {
+        @lines = split /\n/, $self->input_text;
+    }
 
     my @output = ();    # accumulate content for $output, do write at the very end
 
@@ -98,7 +108,7 @@ sub extract_atcf {
             $storm_number = $2;
             $storm_year   = $3;
         }
-        die qq{ERROR: nhc_advisory_bot.pl: NO NHC NUMBER/YEAR\n} if not $storm_number or not $storm_year or not $storm_basin;
+        die qq{NO NHC NUMBER/YEAR\n} if not $storm_number or not $storm_year or not $storm_basin;
     }
     $atcf_line =~ s/_BASIN_/$storm_basin/;
     my $storm_number_str = sprintf( "%02d", $storm_number );
@@ -435,7 +445,7 @@ module's C<save_as_atcf> method.
           rename $local_file, $new_advisory_file;
 
           my $new_advisory_atcf_file = sprintf( "%s.%s.fst", $advNum, $storm->id );
-          my $fst_util = Weather::NHC::TropicalCyclone::Forecast->new( input => $new_advisory_file, output => $new_advisory_atcf_file);
+          my $fst_util = Weather::NHC::TropicalCyclone::Forecast->new( input_file => $new_advisory_file, output_file => $new_advisory_atcf_file);
           $fst_util->save_as_atcf;
      }
   }
@@ -458,9 +468,12 @@ L<https://www.nrlmry.navy.mil/atcf_web/docs/database/new/database.html>.
 
 =item C<new>
 
-Constructor, accepts two named parameters: C<input> and C<output>. These define
-the initial file containing the NHC forecast text and the file to which the
-ATCF format should be written.
+Constructor, accepts two named parameters: C<input_file> or C<input_text>
+and C<output_file>. These define the initial file containing the NHC forecast
+text and the file to which the ATCF format should be written.
+
+Note: C<input_file> and C<input_file> are mutually exclusive. An exception will
+be thrown from the C<new> constructor if both are provided.
 
 =item C<as_atcf>
 
@@ -474,16 +487,21 @@ will usually be what is wanted.
 
 =item C<extract_atcf>
 
-As long as C<input> has been defined and it is in the expected NCH forecast advisory
+As long as C<input_file> has been defined and it is in the expected NCH forecast advisory
 format, relevant data values will be extracted and return with each record contained
 in an array refernce. Each element in this array reference corresponds to a distict
 ATCF record.
 
-=item C<input>
+=item C<input_file>
 
-Accessor for the input file containing the NHC forecast advisory text.
+Accessor for the input file containing the NHC forecast advisory text if used
+in the constructor..
 
-=item C<output>
+=item C<input_text>
+
+Accessor for the input text of the NHC forecast advisory if used in the constructor.
+
+=item C<output_file>
 
 Accessor for the output file that is written with the contents of C<as_atcf> when
 C<save_atcf> or C<extract_and_save_atcf> is called.

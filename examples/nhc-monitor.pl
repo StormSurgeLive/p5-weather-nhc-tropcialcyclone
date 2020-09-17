@@ -5,8 +5,7 @@ use warnings;
 use FindBin qw/$Bin/;
 use lib qq{$Bin/../lib};
 
-use Weather::NHC::TropicalCyclone                   ();
-use Weather::NHC::TropicalCyclone::ForecastAdvisory ();
+use Weather::NHC::TropicalCyclone ();
 
 use Getopt::Long ();
 $|++;    # autoflush
@@ -49,10 +48,10 @@ while ( not $DONE ) {
             my $new_advisory_file = sprintf( "%s.%s.fst.html", $advNum, $storm->id );
             rename $local_file, $new_advisory_file;
 
+            # convert forecast advisorys to ATCF format
             my $new_advisory_atcf_file = sprintf( "%s.%s.fst", $advNum, $storm->id );
-            my $fst_util               = Weather::NHC::TropicalCyclone::ForecastAdvisory->new( input => $new_advisory_file, output => $new_advisory_atcf_file );
+            my ( $atcf_ref, $advNum_atcf, $saved ) = $storm->fetch_forecastAdvisory_as_atcf($new_advisory_atcf_file);
 
-            $fst_util->extract_and_save_atcf;
             print qq{Extracted ATCF format from $new_advisory_file ... \n};
 
             # create symlink to latest $new_advisory_file withouth advNum

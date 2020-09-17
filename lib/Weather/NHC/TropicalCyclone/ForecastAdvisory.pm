@@ -505,6 +505,8 @@ in the ADCIRC Surge Guidance System (ASGS). It is contained in the file,
 C<nhc_advisory_bot.pl>, which is available in their github repository. This
 module is presented simply as a wrapper around this functionality.
 
+L<https://github.com/jasonfleming/asgs/blob/master/nhc_advisory_bot.pl>
+
 =head1 LICENSE & COPYRIGHT
 
 Copyright(C) 2009-2015: Jason Fleming

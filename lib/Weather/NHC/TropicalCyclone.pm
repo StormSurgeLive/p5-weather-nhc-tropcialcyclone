@@ -7,7 +7,7 @@ use HTTP::Status qw/:constants/;
 use JSON::XS                             ();
 use Weather::NHC::TropicalCyclone::Storm ();
 
-our $VERSION                     = q{0.15};
+our $VERSION                     = q{0.16};
 our $DEFAULT_URL                 = q{https://www.nhc.noaa.gov/CurrentStorms.json};
 our $DEFAULT_RSS_ATLANTIC        = q{https://www.nhc.noaa.gov/index-at.xml};
 our $DEFAULT_RSS_EAST_PACIFIC    = q{https://www.nhc.noaa.gov/index-ep.xml};
@@ -244,7 +244,7 @@ this URL is defined with the package variable, C<$DEFAULT_RSS_CENTRAL_PACIFIC>.
 
 =head2 Internal Methods
 
-=over3
+=over 3
 
 =item C<_update_storm_cache>
 

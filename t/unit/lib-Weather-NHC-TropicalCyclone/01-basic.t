@@ -3,6 +3,7 @@ use warnings;
 use FindBin qw/$Bin/;
 use JSON::XS   ();
 use File::Temp ();
+use Net::Ping  ();
 
 use Test::More;
 use Test::Exception;
@@ -28,52 +29,56 @@ can_ok( $obj, (qw/new fetch active_storms get_storm_by_id get_storm_ids _update_
     dies_ok sub { $obj->fetch_rss_central_pacific }, q{ rss fails on bad central pacific request };
 }
 
-my $at_rss = q{};
-ok $at_rss = $obj->fetch_rss_atlantic, q{make atlantic rss call};
-like $at_rss, qr/<rss/, q{appears to be RSS};
-
-{
-    my $fh        = File::Temp->new();
-    my $atl_fname = $fh->filename;
-    ok $at_rss = $obj->fetch_rss_atlantic($atl_fname), q{make atlantic rss call};
+my $p = Net::Ping->new();
+SKIP: {
+    skip( qq{Can't access NHC website\n}, 18 ) unless ( eval { $p->ping( q{www.nhc.noaa.gov}, 2 ); 1 } );
+    my $at_rss = q{};
+    ok $at_rss = $obj->fetch_rss_atlantic, q{make atlantic rss call};
     like $at_rss, qr/<rss/, q{appears to be RSS};
-    ok -e $atl_fname, q{RSS file detected};
-    local $/;
-    my $atl_fname_rss = <$fh>;
-    like $atl_fname_rss, qr/<rss/, q{saved file appears to be RSS};
-    close $fh;
-}
 
-my $ep_rss = q{};
-ok $ep_rss = $obj->fetch_rss_east_pacific, q{make east pacific rss call};
-like $ep_rss, qr/<rss/, q{appears to be RSS};
+    {
+        my $fh        = File::Temp->new();
+        my $atl_fname = $fh->filename;
+        ok $at_rss = $obj->fetch_rss_atlantic($atl_fname), q{make atlantic rss call};
+        like $at_rss, qr/<rss/, q{appears to be RSS};
+        ok -e $atl_fname, q{RSS file detected};
+        local $/;
+        my $atl_fname_rss = <$fh>;
+        like $atl_fname_rss, qr/<rss/, q{saved file appears to be RSS};
+        close $fh;
+    }
 
-{
-    my $fh         = File::Temp->new();
-    my $epac_fname = $fh->filename;
-    ok $ep_rss = $obj->fetch_rss_east_pacific($epac_fname), q{make east rss call};
+    my $ep_rss = q{};
+    ok $ep_rss = $obj->fetch_rss_east_pacific, q{make east pacific rss call};
     like $ep_rss, qr/<rss/, q{appears to be RSS};
-    ok -e $epac_fname, q{RSS file detected};
-    local $/;
-    my $epac_fname_rss = <$fh>;
-    like $epac_fname_rss, qr/<rss/, q{saved file appears to be RSS};
-    close $fh;
-}
 
-my $cp_rss = q{};
-ok $cp_rss = $obj->fetch_rss_central_pacific, q{make central pacific rss call};
-like $cp_rss, qr/<rss/, q{appears to be RSS};
+    {
+        my $fh         = File::Temp->new();
+        my $epac_fname = $fh->filename;
+        ok $ep_rss = $obj->fetch_rss_east_pacific($epac_fname), q{make east rss call};
+        like $ep_rss, qr/<rss/, q{appears to be RSS};
+        ok -e $epac_fname, q{RSS file detected};
+        local $/;
+        my $epac_fname_rss = <$fh>;
+        like $epac_fname_rss, qr/<rss/, q{saved file appears to be RSS};
+        close $fh;
+    }
 
-{
-    my $fh         = File::Temp->new();
-    my $cpac_fname = $fh->filename;
-    ok $cp_rss = $obj->fetch_rss_central_pacific($cpac_fname), q{make central rss call};
+    my $cp_rss = q{};
+    ok $cp_rss = $obj->fetch_rss_central_pacific, q{make central pacific rss call};
     like $cp_rss, qr/<rss/, q{appears to be RSS};
-    ok -e $cpac_fname, q{RSS file detected};
-    local $/;
-    my $cpac_fname_rss = <$fh>;
-    like $cpac_fname_rss, qr/<rss/, q{saved file appears to be RSS};
-    close $fh;
+
+    {
+        my $fh         = File::Temp->new();
+        my $cpac_fname = $fh->filename;
+        ok $cp_rss = $obj->fetch_rss_central_pacific($cpac_fname), q{make central rss call};
+        like $cp_rss, qr/<rss/, q{appears to be RSS};
+        ok -e $cpac_fname, q{RSS file detected};
+        local $/;
+        my $cpac_fname_rss = <$fh>;
+        like $cpac_fname_rss, qr/<rss/, q{saved file appears to be RSS};
+        close $fh;
+    }
 }
 
 open my $dh, q{<}, qq{$Bin/../../data/CurrentStorms.json} or die $!;

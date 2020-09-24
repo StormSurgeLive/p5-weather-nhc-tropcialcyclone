@@ -3249,6 +3249,36 @@ of the C<storm.table> if the data seems to be out of date.
 
 =head1 SYNOPSIS
 
+   my $obj = Weather::NHC::TropicalCyclone::StormTable->new;
+   
+   foreach my $year ( @{ $obj->years } ) {
+       print qq{$year\n};
+   }
+   
+   foreach my $basin ( @{ $obj->basins } ) {
+       print qq{$basin\n};
+   }
+   
+   foreach my $name ( @{ $obj->names } ) {
+       print qq{$name\n};
+   }
+   
+   foreach my $kind ( @{ $obj->storm_kinds } ) {
+       print qq{$kind\n};
+   }
+   
+   foreach my $nhc_designation ( @{ $obj->nhc_designations } ) {
+       print qq{$nhc_designation\n};
+   }
+
+   print $obj->get_history_archive_url(2012, q{al}, q{01}), qq{\n};
+
+   print $obj->get_best_track_archive_url(2012, q{al}, q{01}), qq{\n};
+
+   print $obj->get_fixes_archive_url(2012, q{al}, q{01}), qq{\n};
+
+   print $obj->get_archive_url(2012, q{al}, q{01}), qq{\n};
+
 =head1 METHODS
 
 =over 3

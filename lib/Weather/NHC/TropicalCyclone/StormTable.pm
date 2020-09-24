@@ -13,15 +13,12 @@ sub new {
     };
 
     foreach my $storm (@storm_table) {
-        my @line       = split /, */, $storm;
-        my $name       = uc $line[0];    # all should be upper case, but make sure
-        my $basin      = uc $line[1];
-        my $storm_num  = $line[7];
-        my $storm_year = $line[8];
-        my $storm_kind = uc $line[9];
-        $name       =~ s/ //g;           # get rid of leading white space
-        $basin      =~ s/ //g;           # get rid of leading white space
-        $storm_kind =~ s/ //g;           # get rid of leading white space
+        my $line       = __PACKAGE__->_parse_line($storm);
+        my $name       = $line->[0];
+        my $basin      = $line->[1];
+        my $storm_num  = $line->[7];
+        my $storm_year = $line->[8];
+        my $storm_kind = $line->[9];
 
         # NOTE: adding storm lines by reference for the sake of memory efficiency
 
@@ -41,7 +38,6 @@ sub new {
         # all by year
         push @{ $self->{_by_year}->{$storm_year} }, \$storm;
 
-##
         # all by year, basin
         push @{ $self->{_by_year_basin}->{$basin}->{$storm_year} }, \$storm;
 
@@ -52,13 +48,19 @@ sub new {
     return bless $self, $pkg;
 }
 
-## TODO before releasing v0.17:
-# write tests
-# write POD
+sub _parse_line {
+    my ( $self, $line ) = @_;
+    my @line = split /, */, $line;
+    @line = map { uc $_ } @line;
+    $line[0] =~ s/ //g;    # get rid of leading white space - name
+    $line[1] =~ s/ //g;    # get rid of leading white space - basin
+    $line[9] =~ s/ //g;    # get rid of leading white space - storm kind
+    return \@line;
+}
 
 sub storm_table {
-  my $self = shift;
-  return $self->{storm_table};
+    my $self = shift;
+    return $self->{storm_table};
 }
 
 sub _get_storm_designation {
@@ -3341,6 +3343,10 @@ format.
 =item  _data 
 
 Internal method that encapsulates the raw storm.history file.
+
+=item _parse_line
+
+Parses a storm record and returns an array ref.
 
 =back
 

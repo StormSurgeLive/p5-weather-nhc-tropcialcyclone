@@ -2,8 +2,6 @@ package Weather::NHC::TropicalCyclone::StormTable;
 
 use strict;
 use warnings;
-use Object::Tiny qw/storm_table/;
-use HTTP::Tiny ();
 
 our $NHC_ATCF_ARCHIVE_BASE_URL = q{https://ftp.nhc.noaa.gov/atcf/archive};
 
@@ -15,15 +13,15 @@ sub new {
     };
 
     foreach my $storm (@storm_table) {
-        my @line  = split /, */, $storm;
-        my $name  = uc $line[0];    # all should be upper case, but make sure
-        my $basin = uc $line[1];
+        my @line       = split /, */, $storm;
+        my $name       = uc $line[0];    # all should be upper case, but make sure
+        my $basin      = uc $line[1];
         my $storm_num  = $line[7];
         my $storm_year = $line[8];
         my $storm_kind = uc $line[9];
-        $name       =~ s/ //g; # get rid of leading white space
-        $basin      =~ s/ //g; # get rid of leading white space
-        $storm_kind =~ s/ //g; # get rid of leading white space
+        $name       =~ s/ //g;           # get rid of leading white space
+        $basin      =~ s/ //g;           # get rid of leading white space
+        $storm_kind =~ s/ //g;           # get rid of leading white space
 
         # NOTE: adding storm lines by reference for the sake of memory efficiency
 
@@ -34,7 +32,7 @@ sub new {
         push @{ $self->{_by_basin}->{$basin} }, \$storm;
 
         # by full storm designation (e.g., AL222020, etc)
-        my $desig = sprintf( qq{%s%02d%d}, $basin, $storm_num, $storm_year );
+        my $desig = __PACKAGE__->_get_storm_designation( $basin, $storm_year, $storm_num );
         push @{ $self->{_by_nhc_designation}->{$desig} }, \$storm;
 
         # by kind (HU, TP, etc)
@@ -45,13 +43,60 @@ sub new {
 
 ##
         # all by year, basin
-        push @{ $self->{_by_year_basin}->{$storm_year}->{$basin} }, \$storm;
+        push @{ $self->{_by_year_basin}->{$basin}->{$storm_year} }, \$storm;
 
         # accessor by year, storm number
         $self->{_direct_access}->{$storm_year}->{$storm_num} = \$storm;
     }
 
     return bless $self, $pkg;
+}
+
+## TODO before releasing v0.17:
+# write tests
+# write POD
+
+sub storm_table {
+  my $self = shift;
+  return $self->{storm_table};
+}
+
+sub _get_storm_designation {
+    my ( $self, $basin, $year, $storm_num ) = @_;
+    my $desig = sprintf( "%s%02d%d", $basin, $storm_num, $year );
+    return $desig;
+}
+
+sub get_history_archive_url {
+    my ( $self, $year, $basin, $storm_num ) = @_;
+    my $desig = $self->_get_storm_designation( $basin, $year, $storm_num );
+    my $url   = sprintf( qq{%s/a%s.dat.gz}, $self->get_archive_url($year), $desig );
+    return $url;
+}
+
+sub get_best_track_archive_url {
+    my ( $self, $year, $basin, $storm_num ) = @_;
+    my $desig = $self->_get_storm_designation( $basin, $year, $storm_num );
+    my $url   = sprintf( qq{%s/b%s.dat.gz}, $self->get_archive_url($year), $desig );
+    return $url;
+}
+
+sub get_fixes_archive_url {
+    my ( $self, $year, $basin, $storm_num ) = @_;
+    my $desig = $self->_get_storm_designation( $basin, $year, $storm_num );
+    my $url   = sprintf( qq{%s/f%s.dat.gz}, $self->get_archive_url($year), $desig );
+    return $url;
+}
+
+sub get_archive_url {
+    my ( $self, $year ) = @_;
+    my $url = sprintf( qq{%s/%d}, $NHC_ATCF_ARCHIVE_BASE_URL, $year );
+    return $url;
+}
+
+sub get_by_year_basin {
+    my ( $self, $year, $basin ) = @_;
+    return $self->{_by_year_basin}->{$year}->{$basin};
 }
 
 # internal helper method for dereferencing scalars and returning them
@@ -71,7 +116,7 @@ sub _return_arrayref {
 # get all years
 sub years {
     my $self = shift;
-    return [ keys %{ $self->{_by_year}} ];
+    return [ keys %{ $self->{_by_year} } ];
 }
 
 # get entries for a specific year (case insensitivie)
@@ -84,7 +129,7 @@ sub by_year {
 # get all names
 sub names {
     my $self = shift;
-    return [ keys %{ $self->{_by_name}} ];
+    return [ keys %{ $self->{_by_name} } ];
 }
 
 # get entries for a specific name (case insensitivie)
@@ -97,7 +142,7 @@ sub by_name {
 # get all basins
 sub basins {
     my $self = shift;
-    return [ keys %{ $self->{_by_basin}} ];
+    return [ keys %{ $self->{_by_basin} } ];
 }
 
 sub by_basin {
@@ -109,7 +154,7 @@ sub by_basin {
 # get all nhc_designation_names
 sub nhc_designations {
     my $self = shift;
-    return [ keys %{ $self->{_by_nhc_designation}} ];
+    return [ keys %{ $self->{_by_nhc_designation} } ];
 }
 
 sub by_nhc_designation {
@@ -121,7 +166,7 @@ sub by_nhc_designation {
 # get all kind_names
 sub storm_kinds {
     my $self = shift;
-    return [ keys %{ $self->{_by_kind}} ];
+    return [ keys %{ $self->{_by_kind} } ];
 }
 
 sub by_storm_kind {
@@ -3200,6 +3245,107 @@ of each year. So during an active season, the historical information for the cur
 not be known this module. However, one may use the C<get_latest_table> to retrieve the latest state
 of the C<storm.table> if the data seems to be out of date.
 
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=over 3
+
+=item  new 
+
+Constructor.
+
+=item  years 
+
+Returns a list of all years in the history file.
+
+=item  by_year 
+
+Accessor for all storm records for the provided year, all basins.
+
+=item  names 
+
+Returns a list of all storm names in the history file.
+
+=item  by_name 
+
+Accessor for all storm records for the provided name, all basins.
+
+=item  basins 
+
+Returns a list of all basis in the history file.
+
+=item  by_basin 
+
+Accessor for all storm records for the provided basin.
+
+=item  get_by_year_basin 
+
+Accessor for all storm records for the provided basin and year.
+
+=item  nhc_designations 
+
+Returns a list of all full NHC storm designations, e.g. C<al222020>.
+
+=item  by_nhc_designation 
+
+Returns the storm record for the provided year, basin, and storm number.
+
+=item  storm_kinds 
+
+Returns a list of all kinds of storms in the history file, e.g. C<HU>, C<TD>, etc.
+
+=item  by_storm_kind 
+
+Accessor for all storms of the povided kind.
+
+=item  get_history_archive_url 
+
+For the given year, basin, and storm number; returns the full URL including file
+name for the archived history file; e.g., C<aal112019.dat.gz>.
+
+=item  get_best_track_archive_url 
+
+For the given year, basin, and storm number; returns the full URL including file
+name for the archived best track file; e.g., C<bal112019.dat.gz>.
+
+=item  get_fixes_archive_url 
+
+For the given year, basin, and storm number; returns the full URL including file
+name for the archived fixes file; e.g., C<fal112019.dat.gz>.
+
+=item  get_archive_url 
+
+For the given year, returns the URL for the directory containing all archived files
+and subdirectories.
+
+=item  storm_table 
+
+Returns the entire text of the NHC C<storm.history> file being used by this module.
+
+=back
+
+=head2 Internal Methods
+
+=over 3
+
+=item  _return_arrayref 
+
+Helper method for converting interal data representation into array references.
+
+=item  _get_storm_designation 
+
+Helper method to format provided year, basin, and storm number into the designation
+format.
+
+=item  _data 
+
+Internal method that encapsulates the raw storm.history file.
+
+=back
+
+=head1 ADDITIONAL INFORMATION
+
 =head2 ATCF Storm Archive Information
 
 =over 3
@@ -3208,6 +3354,7 @@ of the C<storm.table> if the data seems to be out of date.
 L<https://www.nrlmry.navy.mil/atcf_web/docs/database/new/database.html#datasources>
 
 =item C<storm.table> format description
+
 L<https://www.nrlmry.navy.mil/atcf_web/docs/database/new/abdeck.txt>
 
 =back

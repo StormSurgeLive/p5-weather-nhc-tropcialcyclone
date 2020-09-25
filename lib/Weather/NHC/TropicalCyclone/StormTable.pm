@@ -6,12 +6,19 @@ use warnings;
 our $NHC_ATCF_ARCHIVE_BASE_URL = q{https://ftp.nhc.noaa.gov/atcf/archive};
 
 sub new {
-    my $pkg         = shift;
-    my @storm_table = split /\n/, __PACKAGE__->_data;
-    my $self        = {
-        storm_table => \@storm_table,
-    };
+    my $pkg  = shift;
+    my $self = bless {}, $pkg;
+    $self->_ingest_storm_table;
+    return $self;
+}
 
+sub _ingest_storm_table {
+    my $self = shift;
+    my @storm_table = split /\n/, $self->_data;
+
+    $self->{storm_table} = \@storm_table;
+
+  RECORD_LOOP:
     foreach my $storm (@storm_table) {
         my $line       = __PACKAGE__->_parse_line($storm);
         my $name       = $line->[0];
@@ -42,10 +49,27 @@ sub new {
         push @{ $self->{_by_year_basin}->{$basin}->{$storm_year} }, \$storm;
 
         # accessor by year, storm number
-        $self->{_direct_access}->{$storm_year}->{$storm_num} = \$storm;
+        $self->{_direct_access}->{$storm_year}->{$basin}->{$storm_num} = \$storm;
     }
+    return;
+}
 
-    return bless $self, $pkg;
+sub get_storm_numbers {
+    my ( $self, $year, $basin ) = @_;
+    return [ keys %{ $self->{_direct_access}->{$year}->{ uc $basin } } ];
+}
+
+sub get_latest_table {
+    my $self = shift;
+    require HTTP::Tiny;
+    my $url      = qq{$NHC_ATCF_ARCHIVE_BASE_URL/storm.table};
+    my $http     = HTTP::Tiny->new;
+    my $response = $http->get($url);
+    if ( not $response->{success} ) {
+        die qq{Unable to retreive updated "storm.history" file.};
+    }
+    $self->_ingest_storm_table( $response->{content} );
+    return;
 }
 
 sub _parse_line {
@@ -3283,77 +3307,87 @@ of the C<storm.table> if the data seems to be out of date.
 
 =over 3
 
-=item  new 
+=item  C<new> 
 
 Constructor.
 
-=item  years 
+=item  C<years>
 
 Returns a list of all years in the history file.
 
-=item  by_year 
+=item  C<by_year> 
 
 Accessor for all storm records for the provided year, all basins.
 
-=item  names 
+=item  C<names> 
 
 Returns a list of all storm names in the history file.
 
-=item  by_name 
+=item  C<by_name>
 
 Accessor for all storm records for the provided name, all basins.
 
-=item  basins 
+=item  C<basins>
 
 Returns a list of all basis in the history file.
 
-=item  by_basin 
+=item  C<by_basin> 
 
 Accessor for all storm records for the provided basin.
 
-=item  get_by_year_basin 
+=item  C<get_by_year_basin>
 
 Accessor for all storm records for the provided basin and year.
 
-=item  nhc_designations 
+=item  C<nhc_designations>
 
 Returns a list of all full NHC storm designations, e.g. C<al222020>.
 
-=item  by_nhc_designation 
+=item  C<by_nhc_designation>
 
 Returns the storm record for the provided year, basin, and storm number.
 
-=item  storm_kinds 
+=item  C<storm_kinds>
 
 Returns a list of all kinds of storms in the history file, e.g. C<HU>, C<TD>, etc.
 
-=item  by_storm_kind 
+=item  C<by_storm_kind>
 
 Accessor for all storms of the povided kind.
 
-=item  get_history_archive_url 
+=item C<get_storm_numbers>
+
+Given the year and basin, returns the storm numbers for that year.
+
+=item  C<get_history_archive_url>
 
 For the given year, basin, and storm number; returns the full URL including file
 name for the archived history file; e.g., C<aal112019.dat.gz>.
 
-=item  get_best_track_archive_url 
+=item  C<get_best_track_archive_url> 
 
 For the given year, basin, and storm number; returns the full URL including file
 name for the archived best track file; e.g., C<bal112019.dat.gz>.
 
-=item  get_fixes_archive_url 
+=item  C<get_fixes_archive_url>
 
 For the given year, basin, and storm number; returns the full URL including file
 name for the archived fixes file; e.g., C<fal112019.dat.gz>.
 
-=item  get_archive_url 
+=item  C<get_archive_url>
 
 For the given year, returns the URL for the directory containing all archived files
 and subdirectories.
 
-=item  storm_table 
+=item  C<storm_table> 
 
 Returns the entire text of the NHC C<storm.history> file being used by this module.
+
+item= C<get_latest_table>
+
+Updates the data used for the query methods with the latest version of the table
+being hosted by the NHC at L<https://ftp.nhc.noaa.gov/atcf/archive/storm.table>,
+underneath utilizes C<HTTP::Tiny>.
 
 =back
 
@@ -3361,20 +3395,25 @@ Returns the entire text of the NHC C<storm.history> file being used by this modu
 
 =over 3
 
-=item  _return_arrayref 
+=item  C<_ingest_storm_table>
+
+Takes C<storm.table> in raw text and shoves it into the reference fields that
+support the other methods. Used by C<new> and C<get_latest_table>.
+
+=item  C<_return_arrayref> 
 
 Helper method for converting interal data representation into array references.
 
-=item  _get_storm_designation 
+=item  C<_get_storm_designation>
 
 Helper method to format provided year, basin, and storm number into the designation
 format.
 
-=item  _data 
+=item  C<_data>
 
 Internal method that encapsulates the raw storm.history file.
 
-=item _parse_line
+=item C<_parse_line>
 
 Parses a storm record and returns an array ref.
 

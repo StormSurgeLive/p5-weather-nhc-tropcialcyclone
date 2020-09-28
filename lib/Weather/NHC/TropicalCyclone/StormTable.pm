@@ -3383,7 +3383,7 @@ and subdirectories.
 
 Returns the entire text of the NHC C<storm.history> file being used by this module.
 
-item= C<get_latest_table>
+=item C<get_latest_table>
 
 Updates the data used for the query methods with the latest version of the table
 being hosted by the NHC at L<https://ftp.nhc.noaa.gov/atcf/archive/storm.table>,

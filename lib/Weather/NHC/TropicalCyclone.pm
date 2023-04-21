@@ -8,7 +8,7 @@ use JSON::XS ();
 use Util::H2O qw/h2o/;
 use Weather::NHC::TropicalCyclone::Storm ();
 
-our $VERSION                     = q{0.34};
+our $VERSION                     = q{0.35};
 our $DEFAULT_URL                 = q{https://www.nhc.noaa.gov/CurrentStorms.json};
 our $DEFAULT_RSS_ATLANTIC        = q{https://www.nhc.noaa.gov/index-at.xml};
 our $DEFAULT_RSS_EAST_PACIFIC    = q{https://www.nhc.noaa.gov/index-ep.xml};

@@ -44,7 +44,7 @@ jobs:
       - name: Install test dependencies
         run: cpanm --notest Dispatch::Fu Util::H2O::More IO::Socket::SSL
       - name: Run offline test suite
-        run: prove -lr t
+        run: prove -l t
 
   pod:
     name: POD
@@ -60,7 +60,7 @@ jobs:
         run: perl -MTest::Pod -e 'all_pod_files_ok(qw(lib))'
 
   coverage:
-    name: 100% code coverage
+    name: 100% statement/subroutine coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -72,7 +72,7 @@ jobs:
       - name: Collect coverage
         run: |
           cover -delete
-          HARNESS_PERL_SWITCHES=-MDevel::Cover prove -lr t
+          HARNESS_PERL_SWITCHES=-MDevel::Cover prove -l t
           cover -report text -select '^lib/' | tee coverage.txt
-      - name: Require 100% statement/branch/condition/subroutine coverage
+      - name: Require 100% statement/subroutine coverage
         run: perl xt/check-coverage.pl coverage.txt

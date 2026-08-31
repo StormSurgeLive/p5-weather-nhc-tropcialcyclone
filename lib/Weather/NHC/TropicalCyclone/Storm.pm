@@ -12,6 +12,10 @@ our $DEFAULT_GRAPHICS_ROOT = q{https://www.nhc.noaa.gov/storm_graphics};
 our $DEFAULT_BTK_ROOT      = q{https://ftp.nhc.noaa.gov/atcf/btk};
 our $CLASSIFICATIONS       = Weather::NHC::TropicalCyclone::Validation->classifications;
 
+our @COMPAT_FIELDS = qw/
+  latitudelongitude latitude_numberic kmzFile34kt kmzFile50kt kmzFile64kt
+/;
+
 our @FIELDS = qw/
   id binNumber name classification intensity pressure latitude longitude
   latitudeNumeric longitudeNumeric movementDir movementSpeed lastUpdate
@@ -35,7 +39,7 @@ sub new {
     }
 
     my %copy = %$data;
-    my $self = baptise -recurse, \%copy, $class, @FIELDS, q{_http};
+    my $self = baptise -recurse, \%copy, $class, @FIELDS, @COMPAT_FIELDS, q{_http};
     $self->{_http} = $args{http} || Weather::NHC::TropicalCyclone::HTTP->new;
     return $self;
 }
@@ -265,6 +269,14 @@ The fields advertised by current NHC data include:
     lastUpdate
 
 NHC may add fields. Unknown fields are preserved by the top-level client.
+
+=head2 Historical compatibility accessors
+
+The 0.35 constructor generated several top-level accessors that were not actual
+current NHC field names: C<latitudelongitude>, C<latitude_numberic>,
+C<kmzFile34kt>, C<kmzFile50kt>, and C<kmzFile64kt>. Version 0.36 retains those
+accessors for source compatibility, but new code should use C<latitudeNumeric>
+and the corresponding fields under C<windSpeedProbabilitiesGIS> instead.
 
 =head2 kind
 

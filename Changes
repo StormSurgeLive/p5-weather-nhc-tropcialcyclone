@@ -7,8 +7,18 @@ Version 0.36 - 2026-08-31
   representative Linux Perl versions plus current macOS and Windows Perl.
 - CI installs runtime/test dependencies explicitly and runs prove directly; dist.ini
   remains author/release metadata and is not used or invoked by CI.
-- Added a dedicated coverage job intended to enforce 100% statement, branch,
-  condition, and subroutine coverage using deterministic offline tests.
+- Added a dedicated coverage job that enforces 100% statement and subroutine
+  coverage using deterministic offline tests. Devel::Cover still reports branch
+  and condition coverage, but those historical-parser metrics are informational
+  rather than release gates.
+- Replaced the legacy recursive t/unit suite with the deterministic top-level
+  t/ suite for CI; the old nested tests depended on live NHC access and on
+  generated placeholder accessors from pre-0.36 internals.
+- Marked the superseded t/unit tree for pruning in dist.ini as a safety net for
+  author checkouts upgraded in place; CI does not use dist.ini.
+- Retained the historical generated Storm accessors latitudelongitude,
+  latitude_numberic, kmzFile34kt, kmzFile50kt, and kmzFile64kt as deprecated
+  compatibility accessors while documenting the current NHC field locations.
 - Reorganized HTTP access, CurrentStorms.json validation, and storm resource
   classification into small internal modules so networking, parsing, and
   product dispatch can be tested independently. Existing public fetch_* methods

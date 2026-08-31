@@ -47,6 +47,7 @@ my $storm = $nhc->get_storm_by_id('al042026');
 my $cp    = $nhc->get_storm_by_id('cp012026');
 
 isa_ok $storm, 'Weather::NHC::TropicalCyclone::Storm';
+can_ok $storm, qw/latitudelongitude latitude_numberic kmzFile34kt kmzFile50kt kmzFile64kt/;
 is $storm->kind, 'Tropical Storm', 'kind';
 is $storm->basin, 'atlantic', 'Atlantic basin';
 is $cp->basin, 'central_pacific', 'Central Pacific basin';
@@ -171,6 +172,7 @@ $storm->{forecastDiscussion}->{url} = 'mock://discussion';
 
 is scalar $cp->fetch_publicAdvisory, undef, 'unavailable text resource returns undef';
 dies_like { $storm->fetch_trackCone('bogus') } qr/not a valid type/, 'invalid file type rejected';
+dies_like { $storm->fetch_publicAdvisory('no-such-dir/advisory.txt') } qr/Failed to open/, 'text save open failure propagated';
 dies_like { Weather::NHC::TropicalCyclone::Storm::_filename_from_url('filename') } qr/Unable to determine/, 'filename extraction failure';
 is Weather::NHC::TropicalCyclone::Storm::_extract_pre_text('<pre>&lt;x&gt; &#65; &quot;q&quot; &#39;s&#39; &nbsp;</pre>', 'mock'), '<x> A "q" \'s\'  ', 'minimal HTML entity decoder';
 

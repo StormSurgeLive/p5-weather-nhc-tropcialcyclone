@@ -24,6 +24,13 @@ my $mock = MockHTTP->new(
     },
 );
 
+{
+    local %ENV = %ENV;
+    delete @ENV{qw/http_proxy HTTP_PROXY https_proxy HTTPS_PROXY all_proxy ALL_PROXY/};
+    my $default_http = Weather::NHC::TropicalCyclone::HTTP->new;
+    isa_ok $default_http->client, 'HTTP::Tiny', 'default HTTP::Tiny client';
+}
+
 my $http = Weather::NHC::TropicalCyclone::HTTP->new( client => $mock );
 is $http->client, $mock, 'client accessor';
 is $http->get('mock://ok')->{content}, 'ok', 'successful get';

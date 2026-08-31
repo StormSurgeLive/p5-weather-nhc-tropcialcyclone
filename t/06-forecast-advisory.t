@@ -101,4 +101,108 @@ ok @$yr >= 2, 'cross-year advisory parsed';
 is 0 + substr( $yr->[-1], 29, 4 ), 9, 'December-to-January forecast period is 9 hours';
 
 unlink $output;
+
+# Historical/special-format regression cases exercise parser paths that are not
+# present in the primary 2020 fixture but remain supported by the converter.
+my @synthetic = (
+    [
+        'pre-2006 advisory date format',
+        <<'ADV'
+000
+WTNT21 KNHC 021500
+TCMAT1
+
+HURRICANE TEST FORECAST/ADVISORY NUMBER  1
+NWS TPC/NATIONAL HURRICANE CENTER MIAMI FL   AL012004
+1500Z THU SEP 02 2004
+
+HURRICANE CENTER LOCATED NEAR 20.0N  60.0W AT 02/1500Z
+PRESENT MOVEMENT TOWARD THE NORTH OR 360 DEGREES AT  10 KT
+ESTIMATED MINIMUM CENTRAL PRESSURE  990 MB
+MAX SUSTAINED WINDS  70 KT WITH GUSTS TO  85 KT.
+
+FORECAST VALID 03/0000Z 21.0N  60.0W
+MAX WIND  70 KT...GUSTS  85 KT.
+
+$$
+ADV
+    ],
+    [
+        'non-forecast advisory header and tropical-storm classification',
+        <<'ADV'
+000
+WTNT21 KNHC 271500
+TCMAT1
+
+TROPICAL STORM TEST ADVISORY NUMBER  1
+NWS NATIONAL HURRICANE CENTER MIAMI FL       AL012026
+1500 UTC THU AUG 27 2026
+
+TROPICAL STORM CENTER LOCATED NEAR 20.0N  60.0W AT 27/1500Z
+PRESENT MOVEMENT TOWARD THE NORTH OR 360 DEGREES AT  10 KT
+ESTIMATED MINIMUM CENTRAL PRESSURE 1000 MB
+MAX SUSTAINED WINDS  40 KT WITH GUSTS TO  50 KT.
+
+FORECAST VALID 28/0000Z 21.0N  60.0W
+MAX WIND  40 KT...GUSTS  50 KT.
+
+$$
+ADV
+    ],
+    [
+        'potential tropical cyclone classification',
+        <<'ADV'
+000
+WTNT21 KNHC 271500
+TCMAT1
+
+POTENTIAL TROPICAL CYCLONE TEST FORECAST/ADVISORY NUMBER  1
+NWS NATIONAL HURRICANE CENTER MIAMI FL       AL012026
+1500 UTC THU AUG 27 2026
+
+POTENTIAL TROPICAL CYCLONE CENTER LOCATED NEAR 20.0N  60.0W AT 27/1500Z
+PRESENT MOVEMENT TOWARD THE NORTH OR 360 DEGREES AT  10 KT
+ESTIMATED MINIMUM CENTRAL PRESSURE 1005 MB
+MAX SUSTAINED WINDS  30 KT WITH GUSTS TO  40 KT.
+
+OUTLOOK VALID 28/0000Z 21.0N  60.0W
+MAX WIND  35 KT...GUSTS  45 KT.
+
+$$
+ADV
+    ],
+    [
+        'dissipating center and dissipated forecast',
+        <<'ADV'
+000
+WTNT21 KNHC 271500
+TCMAT1
+
+TROPICAL DEPRESSION TEST FORECAST/ADVISORY NUMBER  1
+NWS NATIONAL HURRICANE CENTER MIAMI FL       AL012026
+1500 UTC THU AUG 27 2026
+
+TROPICAL DEPRESSION DISSIPATING NEAR 20.0N  60.0W AT 27/1500Z
+PRESENT MOVEMENT TOWARD THE NORTH OR 360 DEGREES AT  10 KT
+ESTIMATED MINIMUM CENTRAL PRESSURE 1008 MB
+MAX SUSTAINED WINDS  25 KT WITH GUSTS TO  35 KT.
+
+FORECAST VALID 28/0000Z DISSIPATED
+
+$$
+ADV
+    ],
+);
+
+for my $case (@synthetic) {
+    my ( $name, $advisory ) = @$case;
+    my $synthetic = Weather::NHC::TropicalCyclone::ForecastAdvisory->new(
+        input_text  => $advisory,
+        output_file => $output,
+    );
+    my $parsed = eval { $synthetic->extract_atcf };
+    ok !$@, "$name parses";
+    ok ref($parsed) eq 'ARRAY' && @$parsed, "$name produces ATCF output";
+}
+
 done_testing;

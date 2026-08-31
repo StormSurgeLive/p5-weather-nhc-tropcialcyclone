@@ -65,6 +65,7 @@ dies_like { $nhc->load_json('{"activeStorms":{}}') } qr/validation failed/, 'loa
 dies_like { $nhc->load_file() } qr/JSON file is required/, 'load_file requires path';
 dies_like { $nhc->load_file('does-not-exist.json') } qr/Can't open/, 'load_file open error';
 
+is $nhc->fetch(), $nhc, 'default fetch URL and timeout work with injected transport';
 is $nhc->fetch( timeout => 0, url => 'mock://current' ), $nhc, 'named fetch options work';
 is_deeply $nhc->get_storm_ids, [qw/al042026 cp012026/], 'fetch updates cache';
 
@@ -103,5 +104,6 @@ dies_like { $slow_nhc->fetch(1) } qr/timed out/, 'legacy alarm timeout retained'
 my $failed = MockHTTP->new( routes => { 'mock://bad' => { success => 0, status => 503 } } );
 my $failed_nhc = Weather::NHC::TropicalCyclone->new( http => $failed );
 dies_like { $failed_nhc->fetch( timeout => 0, url => 'mock://bad' ) } qr/503/, 'fetch HTTP failure propagated';
+dies_like { $nhc->fetch( timeout => 0, save_to => 'no-such-dir/current.json' ) } qr/Can't open/, 'fetch save failure propagated';
 
 done_testing;

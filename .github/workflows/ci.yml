@@ -41,14 +41,10 @@ jobs:
           distribution: ${{ matrix.strawberry && 'strawberry' || 'default' }}
       - name: Perl configuration
         run: perl -V
-      - name: Install Dist::Zilla author dependencies
-        run: cpanm --notest Dist::Zilla Dist::Zilla::Plugin::VersionFromModule Dist::Zilla::Plugin::MetaProvides::Package
-      - name: Install distribution dependencies
-        run: dzil listdeps --missing | cpanm --notest
+      - name: Install test dependencies
+        run: cpanm --notest Dispatch::Fu Util::H2O::More IO::Socket::SSL
       - name: Run offline test suite
         run: prove -lr t
-      - name: Build distribution
-        run: dzil build
 
   pod:
     name: POD
@@ -58,7 +54,8 @@ jobs:
       - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: '5.40'
-      - run: cpanm --notest Test::Pod
+      - name: Install POD test dependency
+        run: cpanm --notest Test::Pod
       - name: Validate POD
         run: perl -MTest::Pod -e 'all_pod_files_ok(qw(lib))'
 
@@ -70,10 +67,8 @@ jobs:
       - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: '5.40'
-      - name: Install dependencies
-        run: |
-          cpanm --notest Dist::Zilla Dist::Zilla::Plugin::VersionFromModule Dist::Zilla::Plugin::MetaProvides::Package Devel::Cover
-          dzil listdeps --missing | cpanm --notest
+      - name: Install coverage dependencies
+        run: cpanm --notest Dispatch::Fu Util::H2O::More IO::Socket::SSL Devel::Cover
       - name: Collect coverage
         run: |
           cover -delete

@@ -5,6 +5,8 @@ Version 0.36 - 2026-08-31
 
 - Modernized the distribution metadata and added GitHub Actions CI across
   representative Linux Perl versions plus current macOS and Windows Perl.
+- CI installs runtime/test dependencies explicitly and runs prove directly; dist.ini
+  remains author/release metadata and is not used or invoked by CI.
 - Added a dedicated coverage job intended to enforce 100% statement, branch,
   condition, and subroutine coverage using deterministic offline tests.
 - Reorganized HTTP access, CurrentStorms.json validation, and storm resource

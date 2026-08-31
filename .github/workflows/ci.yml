@@ -73,6 +73,6 @@ jobs:
         run: |
           cover -delete
           HARNESS_PERL_SWITCHES=-MDevel::Cover prove -l t
-          cover -report text -select '^lib/' | tee coverage.txt
+          cover -report text -select_re '^lib/' | tee coverage.txt
       - name: Require 100% statement/subroutine coverage
         run: perl xt/check-coverage.pl coverage.txt

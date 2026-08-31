@@ -77,6 +77,11 @@ unlink $file;
 ( $text, $adv ) = $storm->fetch_windspeedProbabilities;
 is $text, 'Probabilities', 'probabilities fetched';
 
+( $text, $adv, $saved ) = $storm->fetch_forecastAdvisory;
+is $text, $forecast, 'forecast advisory fetched directly';
+is $adv, '001', 'forecast advisory number';
+is $saved, undef, 'forecast advisory not saved by default';
+
 my @atcf = $storm->fetch_forecastAdvisory_as_atcf;
 is ref $atcf[0], 'ARRAY', 'forecast advisory converted to ATCF';
 is $atcf[1], '001', 'ATCF conversion advisory number';

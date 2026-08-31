@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Perl ${{ matrix.perl }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            perl: '5.16'
+          - os: ubuntu-latest
+            perl: '5.20'
+          - os: ubuntu-latest
+            perl: '5.28'
+          - os: ubuntu-latest
+            perl: '5.36'
+          - os: ubuntu-latest
+            perl: '5.40'
+          - os: macos-latest
+            perl: '5'
+          - os: windows-latest
+            perl: '5'
+            strawberry: true
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+          distribution: ${{ matrix.strawberry && 'strawberry' || 'default' }}
+      - name: Perl configuration
+        run: perl -V
+      - name: Install Dist::Zilla author dependencies
+        run: cpanm --notest Dist::Zilla Dist::Zilla::Plugin::VersionFromModule Dist::Zilla::Plugin::MetaProvides::Package
+      - name: Install distribution dependencies
+        run: dzil listdeps --missing | cpanm --notest
+      - name: Run offline test suite
+        run: prove -lr t
+      - name: Build distribution
+        run: dzil build
+
+  pod:
+    name: POD
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.40'
+      - run: cpanm --notest Test::Pod
+      - name: Validate POD
+        run: perl -MTest::Pod -e 'all_pod_files_ok(qw(lib))'
+
+  coverage:
+    name: 100% code coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.40'
+      - name: Install dependencies
+        run: |
+          cpanm --notest Dist::Zilla Dist::Zilla::Plugin::VersionFromModule Dist::Zilla::Plugin::MetaProvides::Package Devel::Cover
+          dzil listdeps --missing | cpanm --notest
+      - name: Collect coverage
+        run: |
+          cover -delete
+          HARNESS_PERL_SWITCHES=-MDevel::Cover prove -lr t
+          cover -report text -select '^lib/' | tee coverage.txt
+      - name: Require 100% statement/branch/condition/subroutine coverage
+        run: perl xt/check-coverage.pl coverage.txt
